@@ -14,6 +14,8 @@ namespace UE4_Binary_Builder
         private string AutomationExePath = Settings.Default.AutomationPath;
         private Process AutomationToolProcess;
 
+        private StreamWriter OutFile;
+
         private delegate void SetLogTextDelegate(string Text);
 
         public MainWindow()
@@ -42,6 +44,8 @@ namespace UE4_Binary_Builder
             bSignExecutables.Checked = Settings.Default.bSignExes;
             bEnableSymStore.Checked = Settings.Default.bSymStore;
             bCleanBuild.Checked = Settings.Default.bCleanBuild;
+
+            OutFile = new System.IO.StreamWriter(@"out.log", true);
         }
 
         private void bHostPlatformOnly_CheckedChanged(object sender, EventArgs e)
@@ -169,6 +173,8 @@ namespace UE4_Binary_Builder
             Settings.Default.bSymStore = bEnableSymStore.Checked;
             Settings.Default.bCleanBuild = bCleanBuild.Checked;
             Settings.Default.Save();
+
+            OutFile.Close();
         }
 
         private void AboutMenu_Click(object sender, EventArgs e)
@@ -219,6 +225,9 @@ namespace UE4_Binary_Builder
                 {
                     LogWindow.ForeColor = Color.Red;
                 }
+
+                OutFile.WriteLine(Message);
+                OutFile.Flush();
 
                 LogWindow.Text += Message + "\r\n";
                 LogWindow.SelectionStart = LogWindow.TextLength;
