@@ -46,8 +46,10 @@ namespace UE4_Binary_Builder
             bSignExecutables.Checked = Settings.Default.bSignExes;
             bEnableSymStore.Checked = Settings.Default.bSymStore;
             bCleanBuild.Checked = Settings.Default.bCleanBuild;
-
-            OutFile = new System.IO.StreamWriter(@"out.log", true);
+			bWithFullDebugInfo.Checked = Settings.Default.bWithFullDebugInfo;
+            GameConfigurations.Text = Settings.Default.GameConfigurations;
+			
+			OutFile = new System.IO.StreamWriter(@"out.log", true);
         }
 
         private void bHostPlatformOnly_CheckedChanged(object sender, EventArgs e)
@@ -86,7 +88,18 @@ namespace UE4_Binary_Builder
                 }
 
                 BuildRocketUE.Enabled = false;
-                string CommandLineArgs = "BuildGraph -target=\"Make Installed Build Win64\" -script=Engine/Build/InstalledEngineBuild.xml -set:WithDDC=" + GetConditionalString(bWithDDC.Checked) + " -set:SignExecutables=" + GetConditionalString(bSignExecutables.Checked) + " -set:EnableSymStore=" + GetConditionalString(bEnableSymStore.Checked);                
+
+                if (GameConfigurations.Text == "")
+                {
+                    GameConfigurations.Text = "Development;Shipping";
+                }
+
+                string CommandLineArgs = String.Format("BuildGraph -target=\"Make Installed Build Win64\" -script=Engine/Build/InstalledEngineBuild.xml -set:WithDDC={0} -set:SignExecutables={1} -set:EmbedSrcSrvInfo={2} -set:GameConfigurations={3} -set:WithFullDebugInfo={4}", 
+                    GetConditionalString(bWithDDC.Checked), 
+                    GetConditionalString(bSignExecutables.Checked), 
+                    GetConditionalString(bEnableSymStore.Checked), 
+                    GameConfigurations.Text,
+                    GetConditionalString(bWithFullDebugInfo.Checked));
 
                 if (bHostPlatformOnly.Checked)
                 {
@@ -180,6 +193,9 @@ namespace UE4_Binary_Builder
             Settings.Default.bSignExes = bSignExecutables.Checked;
             Settings.Default.bSymStore = bEnableSymStore.Checked;
             Settings.Default.bCleanBuild = bCleanBuild.Checked;
+            Settings.Default.bWithFullDebugInfo = bWithFullDebugInfo.Checked;
+
+            Settings.Default.GameConfigurations = GameConfigurations.Text;
             Settings.Default.Save();
 
             OutFile.Close();
@@ -208,6 +224,7 @@ namespace UE4_Binary_Builder
         private void AutomationToolProcess_Exited(object sender, EventArgs e)
         {
             SetLogText(string.Format("AutomationToolProcess exited with code {0}\n", AutomationToolProcess.ExitCode.ToString()));
+            BuildRocketUE.Enabled = true;
         }
 
         private void AddLog(string Message)
